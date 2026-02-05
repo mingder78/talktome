@@ -31,7 +31,7 @@ function handleDecodedAudio(audioData: AudioData) {
   console.log("decoded frames:", pcm.length);
 
   // send back if needed
-  // self.postMessage(pcm, [pcm.buffer]);
+  self.postMessage(pcm, [pcm.buffer]);
 
   audioData.close();
 }

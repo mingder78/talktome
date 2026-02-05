@@ -11,9 +11,33 @@ const output = document.getElementById("output") as HTMLPreElement;
 const worker = new Worker(new URL("./audioWorker.ts", import.meta.url), {
   type: "module",
 });
+const audioCtx = new AudioContext({ sampleRate: 48000 });
+
+let playTime = 0;
+
+worker.onmessage = (e: MessageEvent<Float32Array>) => {
+  const pcm = e.data;
+
+  // create AudioBuffer
+  const buffer = audioCtx.createBuffer(1, pcm.length, 48000);
+
+  buffer.copyToChannel(pcm, 0);
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(audioCtx.destination);
+
+  // smooth scheduling (no gaps)
+  if (playTime < audioCtx.currentTime) playTime = audioCtx.currentTime;
+
+  src.start(playTime);
+
+  playTime += buffer.duration;
+};
 
 startBtn.onclick = async () => {
   try {
+    await audioCtx.resume();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const audioTrack = stream.getAudioTracks()[0];
 
