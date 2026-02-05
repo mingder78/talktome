@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+    <body>
+        <button id="btn">Connect</button>
+        <pre id="log"></pre>
+
+        <script type="module">
+            import { createLibp2p } from "https://esm.sh/libp2p@3";
+            import { webTransport } from "https://esm.sh/@libp2p/webtransport";
+            import { webSockets } from "https://esm.sh/@libp2p/websockets";
+            import { noise } from "https://esm.sh/@chainsafe/libp2p-noise";
+            import { yamux } from "https://esm.sh/@libp2p/yamux";
+            import { multiaddr } from "https://esm.sh/@multiformats/multiaddr";
+
+            const PROTOCOL = "/chat/1.0.0";
+
+            const log = (m) =>
+                (document.querySelector("#log").textContent += m + "\n");
+
+            const node = await createLibp2p({
+                transports: [webTransport(), webSockets()],
+                connectionEncryption: [noise()],
+                streamMuxers: [yamux()],
+            });
+
+            await node.start();
+
+            log("PeerId: " + node.peerId);
+
+            document.getElementById("btn").onclick = async () => {
+                const addr = multiaddr(
+                    "/dns4/localhost/udp/4001/quic-v1/webtransport/p2p/12D3KooWNfdT2u1erapu83JWDuxWN2DDXoFzEnzh2MqiGxPhgHHU",
+                );
+
+                const stream = await node.dialProtocol(addr, PROTOCOL);
+
+                await stream.sink([
+                    new TextEncoder().encode("hello from browser"),
+                ]);
+
+                log("sent");
+            };
+        </script>
+    </body>
+</html>
