@@ -12,8 +12,6 @@ const worker = new Worker(new URL("./audioWorker.ts", import.meta.url), {
   type: "module",
 });
 
-console.log(worker);
-
 startBtn.onclick = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -38,18 +36,32 @@ startBtn.onclick = async () => {
   }
 };
 
+function handleChunk(chunk: EncodedAudioChunk) {
+  // ⭐ send chunk directly (best way)
+  console.log("Opus packet:", chunk.byteLength);
+  worker.postMessage(chunk);
+}
+
 async function readFrames() {
   if (!reader) return;
+  const encoder = new AudioEncoder({
+    output: handleChunk,
+    error: console.error,
+  });
 
+  encoder.configure({
+    codec: "opus", // ⭐ key
+    sampleRate: 48000, // opus standard
+    numberOfChannels: 1, // or 2
+    bitrate: 64000, // optional
+  });
   while (isRunning) {
     const { done, value: audioFrame } = await reader.read();
     if (done || !audioFrame) break;
 
+    encoder.encode(audioFrame);
     // 處理音訊幀
     processFrame(audioFrame);
-
-    // Optional: send to worker
-    worker.postMessage(audioFrame);
   }
 }
 

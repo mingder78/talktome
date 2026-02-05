@@ -1,9 +1,37 @@
-// src/audioWorker.ts
-self.onmessage = (event: MessageEvent<AudioData>) => {
-  const frame = event.data as AudioData;
+let decoder: AudioDecoder;
 
-  // 可以在這裡做編碼、視覺化或其他計算
-  console.log("Worker got frame:", frame.numberOfFrames, frame.sampleRate);
+decoder = new AudioDecoder({
+  output: handleDecodedAudio,
+  error: console.error,
+});
 
-  frame.close(); // 記得釋放
+decoder.configure({
+  codec: "opus",
+  sampleRate: 48000,
+  numberOfChannels: 1,
+});
+
+self.onmessage = (event: MessageEvent<EncodedAudioChunk>) => {
+  const chunk = event.data;
+
+  // ⭐ decode opus packet
+  decoder.decode(chunk);
 };
+
+function handleDecodedAudio(audioData: AudioData) {
+  // Convert to PCM
+  const pcm = new Float32Array(audioData.numberOfFrames);
+
+  audioData.copyTo(pcm, {
+    planeIndex: 0,
+    format: "f32",
+  });
+
+  // Now you have raw samples
+  console.log("decoded frames:", pcm.length);
+
+  // send back if needed
+  // self.postMessage(pcm, [pcm.buffer]);
+
+  audioData.close();
+}
