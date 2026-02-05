@@ -1,12 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-TW">
     <head>
         <meta charset="UTF-8" />
-        <title>Audio Frame Worker Demo</title>
+        <title>Audio MediaStreamTrackProcessor Demo</title>
     </head>
     <body>
-        <h1>Audio Frame Streaming Demo</h1>
-        <input type="file" id="audioFile" accept="audio/*" />
+        <h1>音訊幀採集</h1>
+        <button id="startBtn">開始採集麥克風</button>
+        <button id="stopBtn" disabled>停止</button>
+        <div id="status">狀態: 待機</div>
+        <pre id="output"></pre>
+
+        <!-- Vite entry -->
         <script type="module" src="/src/main.ts"></script>
     </body>
 </html>
