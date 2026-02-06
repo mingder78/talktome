@@ -52,7 +52,7 @@ startBtn.onclick = async () => {
     isRunning = true;
     startBtn.disabled = true;
     stopBtn.disabled = false;
-    statusEl.innerText = "狀態: 正在採集...";
+    statusEl.innerText = "status: sampling...";
 
     readFrames();
   } catch (err) {
@@ -91,10 +91,10 @@ async function readFrames() {
 
 function processFrame(frame: AudioData) {
   output.innerText = `
-時間戳: ${frame.timestamp}
-取樣數: ${frame.numberOfFrames}
-聲道數: ${frame.numberOfChannels}
-取樣率: ${frame.sampleRate} Hz
+timestamp: ${frame.timestamp}
+sampling rate: ${frame.numberOfFrames}
+channel: ${frame.numberOfChannels}
+sampling freq.: ${frame.sampleRate} Hz
   `;
 }
 
@@ -103,5 +103,5 @@ stopBtn.onclick = () => {
   reader?.cancel();
   startBtn.disabled = false;
   stopBtn.disabled = true;
-  statusEl.innerText = "狀態: 已停止";
+  statusEl.innerText = "status: stop";
 };
