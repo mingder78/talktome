@@ -24,8 +24,6 @@ import { webTransport } from "@libp2p/webtransport";
 import { webRTC } from "@libp2p/webrtc";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { Components } from "@libp2p/components";
-import { a } from "@libp2p/interface";
-console.log(a);
 
 const pubsubService = gossipsub() as unknown as (
   components: Components & { pubsub: PubSub<GossipsubEvents>; identify: any },
