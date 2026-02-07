@@ -1,3 +1,14 @@
+import { multiaddr } from "@multiformats/multiaddr";
+import { PUBSUB_AUDIO, MIMETYPE } from "@/constants";
+import {
+  createNewLibp2p,
+  update,
+  getPeerTypes,
+  getAddresses,
+  getPeerDetails,
+} from "@/utils";
+const PROTOCOL = "/chat/1.0.0";
+
 let processor: MediaStreamTrackProcessor<AudioData> | null;
 let reader: ReadableStreamDefaultReader<AudioData> | null;
 let isRunning = false;
@@ -6,6 +17,27 @@ const startBtn = document.getElementById("startBtn") as HTMLButtonElement;
 const stopBtn = document.getElementById("stopBtn") as HTMLButtonElement;
 const statusEl = document.getElementById("status") as HTMLDivElement;
 const output = document.getElementById("output") as HTMLPreElement;
+
+const log = (m: string) =>
+  ((document.getElementById("log") as HTMLPreElement).textContent += m + "\n");
+
+const node = await createNewLibp2p();
+
+await node.start();
+
+log("PeerId: " + node.peerId);
+
+document.getElementById("btn").onclick = async () => {
+  const addr = multiaddr(
+    "/dns4/localhost/udp/4001/quic-v1/webtransport/p2p/12D3KooWNfdT2u1erapu83JWDuxWN2DDXoFzEnzh2MqiGxPhgHHU",
+  );
+
+  const stream = await node.dialProtocol(addr, PROTOCOL);
+
+  await stream.sink([new TextEncoder().encode("hello from browser")]);
+
+  log("sent");
+};
 
 // Optional: use a worker for frame processing
 const worker = new Worker(new URL("./audioWorker.ts", import.meta.url), {
@@ -38,11 +70,17 @@ worker.onmessage = (e: MessageEvent<Float32Array>) => {
 startBtn.onclick = async () => {
   try {
     await audioCtx.resume();
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      }, // or just audio: true
+    });
     const audioTrack = stream.getAudioTracks()[0];
 
     if (typeof MediaStreamTrackProcessor === "undefined") {
-      alert("您的瀏覽器不支援 MediaStreamTrackProcessor");
+      alert("Your browser does not support MediaStreamTrackProcessor");
       return;
     }
 
